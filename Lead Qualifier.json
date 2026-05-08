@@ -1,0 +1,582 @@
+{
+  "name": "Lead Qualifier",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "AI lead qualification system",
+        "formDescription": "collects information from the users.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name:",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Contact ",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "what is your budget?",
+              "fieldType": "number",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "How urgent it is needed?",
+              "fieldType": "radio",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "High"
+                  },
+                  {
+                    "option": "Medium"
+                  },
+                  {
+                    "option": "Low"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        112
+      ],
+      "id": "d1c21ab3-4dfd-4645-91ae-b68f542a4d2c",
+      "name": "On form submission",
+      "webhookId": "0d349c6b-470e-4c02-9bb6-497d84c2c6d2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        304
+      ],
+      "id": "2c844e3c-300e-4d6d-9efc-3ac665304bc2",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "3sdBQPVVqc9G6uLr",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze:\n\nBudget: {{ $json.Budget }}\nUrgency: {{ $json.Urgency }}\n\nStep 1: Base category by budget:\n- Budget > 20000 → hot\n- Budget >= 10000 AND <= 20000 → warm\n- Budget < 10000 → cold\n\nStep 2: Adjust using urgency:\n- If urgency = high:\n    cold → warm\n    warm → hot\n    hot → hot (no change)\n\n- If urgency = low:\n    hot → warm\n    warm → cold\n    cold → cold (no change)\n\n- If urgency = medium:\n    no change\n\nFinal Output Rules:\n- Return ONLY one word: hot OR warm OR cold\n- Do NOT add any explanation or extra text\n- Output must be lowercase",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        448,
+        112
+      ],
+      "id": "e910a9fc-fa7f-4466-a08d-1ed6181add67",
+      "name": "Customer categorization"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0296d231-ed1d-4c2d-a66f-95b5a07f3bb2",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        800,
+        -192
+      ],
+      "id": "eacdbcdd-994d-4f1c-bfe0-6e5f8cfc7138",
+      "name": "Lead = HOT"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3edd9cbe-fae3-4c82-b449-8d7e35948ade",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        800,
+        112
+      ],
+      "id": "ad28d686-1b62-4ca1-add7-dc2ebfe109ad",
+      "name": "Lead = WARM"
+    },
+    {
+      "parameters": {
+        "sendTo": "vallabhanenikrishnasai@gmail.com",
+        "subject": "HOT Lead",
+        "message": "We got a pottential client and one we must assist them.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1088,
+        -208
+      ],
+      "id": "22f64619-0e56-4b78-a17c-253c124f8b8e",
+      "name": "Mail to staff",
+      "webhookId": "85d307eb-d000-4fac-a250-fc2fab21ed75",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "lp1jReBwSO2gsv6j",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1024,
+        224
+      ],
+      "id": "bb9ae9c8-2571-49ca-8095-0d46385113a2",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "kAJ0u7qpcqzezGhg",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "write a cold email to make the client to take the service.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1024,
+        0
+      ],
+      "id": "c1da244c-9be5-48d4-89ea-25e1490c577c",
+      "name": "Queries to make a lead"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "recipientPhoneNumber": "6301954579",
+        "textBody": "Try our website services which you can not object.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        1376,
+        112
+      ],
+      "id": "71fea39f-990b-48fb-a352-abb62ea21523",
+      "name": "Send message",
+      "webhookId": "d016d194-a523-4bc8-a0bb-141848579ae9",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "E9zVKRdRAtzRfWXs",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1600,
+        112
+      ],
+      "id": "fe365ef3-86c0-4489-be06-54328524bc8c",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AeTGrrlCCcU9VOos",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "vallabhanenikrishnasai@gmail.com",
+        "subject": "Lead Qualification - HOT ",
+        "message": "We got a hot lead and one of us should handle the client.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1088,
+        400
+      ],
+      "id": "9cb535dc-2ee7-4cad-b7e9-cc97a322f0cf",
+      "name": "Send a message",
+      "webhookId": "4d9f1089-488a-438c-b76b-2e94acecb665",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "lp1jReBwSO2gsv6j",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "716eb52b-547c-497b-b5b4-409ca947999a",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        800,
+        416
+      ],
+      "id": "1e53b460-5e86-42ba-a96a-1c72d797bd61",
+      "name": "Lead  = COLD"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get input values\nlet budget = $input.first().json['what is your budget?'];\nlet urgency = $input.first().json['How urgent it is needed?'];\n\n// Normalize urgency\nurgency = String(urgency).toLowerCase().trim();\n\n// Default fallback\nif (!budget || isNaN(budget)) {\n  return [{ json: { lead_type: \"warm\" } }];\n}\n\nif (![\"high\", \"medium\", \"low\"].includes(urgency)) {\n  urgency = \"medium\";\n}\n\n// Step 1: Base category\nlet lead = \"\";\n\nif (budget > 20000) {\n  lead = \"hot\";\n} else if (budget >= 10000) {\n  lead = \"warm\";\n} else {\n  lead = \"cold\";\n}\n\n// Step 2: Adjust using urgency\nif (urgency === \"high\") {\n  if (lead === \"cold\") lead = \"warm\";\n  else if (lead === \"warm\") lead = \"hot\";\n}\nelse if (urgency === \"low\") {\n  if (lead === \"hot\") lead = \"warm\";\n  else if (lead === \"warm\") lead = \"cold\";\n}\n\n// Return result\nreturn [\n  {\n    json: {\n      lead_type: lead,\n      Budget: budget,\n      Urgency: urgency\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        112
+      ],
+      "id": "902b2259-5895-43b8-849d-cfdc37b2a6e8",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1TZOP1zEqQi19oZ9L0whzqPbO68Vol8dN5h46R3uyrKU",
+          "mode": "list",
+          "cachedResultName": "Lead qualification",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TZOP1zEqQi19oZ9L0whzqPbO68Vol8dN5h46R3uyrKU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TZOP1zEqQi19oZ9L0whzqPbO68Vol8dN5h46R3uyrKU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('On form submission').item.json['Name:'] }}",
+            "Contact": "={{ $('On form submission').item.json['Contact '] }}",
+            "Budget": "={{ $('On form submission').item.json['what is your budget?'] }}",
+            "Urgency": "={{ $('On form submission').item.json['How urgent it is needed?'] }}",
+            "Status": "={{ $('Customer categorization').item.json.output }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Contact",
+              "displayName": "Contact",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Urgency",
+              "displayName": "Urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1376,
+        -208
+      ],
+      "id": "e63f8489-407a-4229-a4bb-10a16e93e101",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kbCXWBr3y5CxTvcL",
+          "name": "Google Sheets account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Customer categorization",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer categorization": {
+      "main": [
+        [
+          {
+            "node": "Lead = HOT",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Lead  = COLD",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Lead = WARM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead = HOT": {
+      "main": [
+        [
+          {
+            "node": "Mail to staff",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead = WARM": {
+      "main": [
+        [
+          {
+            "node": "Queries to make a lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Queries to make a lead",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Queries to make a lead": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mail to staff": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead  = COLD": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Customer categorization",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c29d7625-1bf7-4b5f-baec-793a8d3e5f09",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a9fea607834b9e768d048d8819ba0f040bbb4ca87e4fcb9286373c3436c5555c"
+  },
+  "id": "9ym1BtA4zAvBM9r6",
+  "tags": []
+}
